@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">flappy bird</string>
+    <string name="splash_logo_desc">Game Logo</string>
+</resources>
