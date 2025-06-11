@@ -4,93 +4,61 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-
-import java.util.Random;
+import android.graphics.Paint;
+import android.graphics.RectF;
 
 public class Pipe {
     private Bitmap topPipe, bottomPipe;
     private float x, topY, bottomY;
-    private float pipeGap;
-    private float speed = 10;
-    private int screenHeight;
+    private float width, height;
+    private final float gap;
     private boolean passed = false;
+    private float speed = 10f;
+    private RectF topRect, bottomRect;
 
-    public Pipe(Context context, int screenWidth, int screenHeight, float pipeGap) {
-        this.pipeGap = pipeGap;
-        this.screenHeight = screenHeight;
+    public Pipe(Context context, float startX, float screenHeight) {
+        Bitmap rawTop = BitmapFactory.decodeResource(context.getResources(), R.drawable.pipe_top);
+        Bitmap rawBottom = BitmapFactory.decodeResource(context.getResources(), R.drawable.pipe_bottom);
 
-        // Load images
-        topPipe = BitmapFactory.decodeResource(context.getResources(), R.drawable.pipe_top);
-        bottomPipe = BitmapFactory.decodeResource(context.getResources(), R.drawable.pipe_bottom);
+        // ✅ Scale pipes to screen height
+        this.height = screenHeight / 3f;
+        this.width = height / 3f;
 
-        // Resize pipes to fit screen (adjust scale as needed)
-        int pipeHeight = (int) (screenHeight * 0.35f); // 35% of screen height
-        int pipeWidth = (int) (pipeHeight * 0.4f);     // Aspect ratio ~2:5
+        this.topPipe = Bitmap.createScaledBitmap(rawTop, (int) width, (int) height, false);
+        this.bottomPipe = Bitmap.createScaledBitmap(rawBottom, (int) width, (int) height, false);
 
-        topPipe = Bitmap.createScaledBitmap(topPipe, pipeWidth, pipeHeight, false);
-        bottomPipe = Bitmap.createScaledBitmap(bottomPipe, pipeWidth, pipeHeight, false);
+        this.gap = screenHeight / 4f;
+        this.x = startX;
 
-        resetPosition(screenWidth);
+        float centerY = (float) (Math.random() * (screenHeight - gap - 400)) + 200;
+        this.topY = centerY - gap / 2 - height;
+        this.bottomY = centerY + gap / 2;
+
+        this.topRect = new RectF(x, topY, x + width, topY + height);
+        this.bottomRect = new RectF(x, bottomY, x + width, bottomY + height);
     }
 
     public void update() {
         x -= speed;
-
-        if (x + topPipe.getWidth() < 0) {
-            resetPosition(GameView.screenX);
-        }
+        topRect.offset(-speed, 0);
+        bottomRect.offset(-speed, 0);
     }
 
-    public void draw(Canvas canvas) {
-        canvas.drawBitmap(topPipe, x, topY, null);
-        canvas.drawBitmap(bottomPipe, x, bottomY, null);
+    public void draw(Canvas canvas, Paint paint) {
+        canvas.drawBitmap(topPipe, null, topRect, paint);
+        canvas.drawBitmap(bottomPipe, null, bottomRect, paint);
     }
 
-    // Reset pipe to right side with random Y position
-    public void resetPosition(int screenWidth) {
-        x = screenWidth;
-
-        // Randomize middle gap between 20% and 80% of screen height
-        Random rand = new Random();
-        int midY = rand.nextInt((int) (screenHeight * 0.6f)) + (int) (screenHeight * 0.2f);
-
-        topY = midY - pipeGap / 2 - topPipe.getHeight();
-        bottomY = midY + pipeGap / 2;
-
-        passed = false;
+    public boolean collidesWith(Bird bird) {
+        return RectF.intersects(topRect, bird.getRect()) || RectF.intersects(bottomRect, bird.getRect());
     }
 
-    // Getter methods
     public float getX() {
         return x;
     }
 
-    public float getTopY() {
-        return topY;
-    }
-
-    public float getBottomY() {
-        return bottomY;
-    }
-
-    public Bitmap getTopPipe() {
-        return topPipe;
-    }
-
-    public Bitmap getBottomPipe() {
-        return bottomPipe;
-    }
-
-    public int getWidth() {
-        return topPipe.getWidth();
-    }
-
-    public int getTopHeight() {
-        return topPipe.getHeight();
-    }
-
-    public int getBottomHeight() {
-        return bottomPipe.getHeight();
+    public float getWidth() {
+        return width;
     }
 
     public boolean isPassed() {

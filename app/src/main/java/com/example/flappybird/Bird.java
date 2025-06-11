@@ -3,35 +3,40 @@ package com.example.flappybird;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
 
 public class Bird {
     private Bitmap birdBitmap;
     private float x, y;
     private float velocity = 0;
-    private float gravity = 1.5f;
+    private final float gravity = 1f;
+    private final float lift = -15f;
+    private RectF rect;
 
-    public Bird(Context context) {
+    public Bird(Context context, float screenX, float screenY) {
         birdBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.bird);
-        x = 100;
-        y = GameView.screenY / 2 - birdBitmap.getHeight() / 2;
+        x = screenX / 4;
+        y = screenY / 2;
+        rect = new RectF(x, y, x + birdBitmap.getWidth(), y + birdBitmap.getHeight());
     }
 
     public void update() {
         velocity += gravity;
         y += velocity;
+        rect.set(x, y, x + birdBitmap.getWidth(), y + birdBitmap.getHeight());
     }
 
-    public void fly() {
-        velocity = -20;
+    public void draw(Canvas canvas, Paint paint) {
+        canvas.drawBitmap(birdBitmap, x, y, paint);
     }
 
-    public void draw(android.graphics.Canvas canvas) {
-        canvas.drawBitmap(birdBitmap, x, y, null);
+    public void flap() {
+        velocity = lift;
     }
 
-    public float getX() { return x; }
-    public float getY() { return y; }
-    public Bitmap getBitmap() { return birdBitmap; }
-    public int getWidth() { return birdBitmap.getWidth(); }
-    public int getHeight() { return birdBitmap.getHeight(); }
+    public RectF getRect() {
+        return rect;
+    }
 }
